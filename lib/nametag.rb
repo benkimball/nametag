@@ -9,37 +9,49 @@ class Nametag < Thor
     Example: nametag reassign infile.xml --from 8 --to 2
   LONGDESC
   def reassign(infile)
-    from = options[:from]
-    to = options[:to]
-    error("Could not find file #{infile}") unless File.exists?(infile)
-
-    tmpl = Template.new(infile)
-    [from, to].each do |id|
-      error("Unknown recipient #{id}") unless tmpl.valid_recipient_id?(id)
+    from = options[:from].to_i
+    to = options[:to].to_i
+    with_template(infile) do |tmpl|
+      error("Unknown recipient #{from}") unless tmpl.valid_recipient_id?(from)
+      error("Unknown recipient #{to}") unless tmpl.valid_recipient_id?(to)
+      tmpl.reassign_recipients!(from, to)
+      $stdout.print tmpl.to_xml
     end
+  end
 
-    tmpl.reassign_recipients!(from, to)
-    $stdout.print tmpl.to_xml
+  desc "delete FILE RECIPIENT_ID", "Remove a recipient without changing tabs"
+  def delete(infile, recipient_id)
+    id = recipient_id.to_i
+    with_template(infile) do |tmpl|
+      error("Unknown recipient #{id}") unless tmpl.valid_recipient_id?(id)
+      tmpl.delete_recipient!(id)
+      $stdout.print tmpl.to_xml
+    end
   end
 
   desc "list FILE", "List all recipients in the template"
   def list(infile)
-    error("Could not find file #{infile}") unless File.exists?(infile)
-    tmpl = Template.new(infile)
-    puts "ID      Order   RoleName        Type"
-    puts tmpl.recipients.sort_by(&:routing_order)
+    with_template(infile) do |tmpl|
+      puts "ID      Order   RoleName        Type"
+      puts tmpl.recipients.sort_by(&:routing_order)
+    end
   end
 
   desc "xpath FILE SELECTOR", "Search template with xpath selector"
   def xpath(infile, selector)
-    error("Could not find file #{infile}") unless File.exists?(infile)
-    tmpl = Template.new(infile)
-    puts tmpl.xpath(selector)
+    with_template(infile) do |tmpl|
+      puts tmpl.xpath(selector)
+    end
   end
 
   private
   def error(str)
     puts [nil, "Error: #{str}"]
     exit 1
+  end
+
+  def with_template(infile)
+    error("Could not find file #{infile}") unless File.exists?(infile)
+    yield Template.new(infile)
   end
 end

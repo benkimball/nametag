@@ -37,7 +37,17 @@ class Template
   end
 
   def valid_recipient_id?(id)
-    recipients.map(&:id).include?(id.to_i)
+    recipients.map(&:id).include? id
+  end
+
+  def delete_recipient!(id)
+    xpath = "//" + element("Recipients")
+    xpath += "/" + element("Recipient")
+    xpath += "[" + element("ID") + "=#{id}]"
+    tab = @doc.at_xpath(xpath)
+    if tab
+      tab.remove
+    end
   end
 
   def reassign_recipients!(from, to)
