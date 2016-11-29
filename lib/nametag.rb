@@ -29,6 +29,17 @@ class Nametag < Thor
     end
   end
 
+  desc "rename FILE RECIPIENT_ID NEW_ROLE_NAME", "Rename a recipient's role"
+  def rename(infile, recipient_id, new_role_name)
+    id = recipient_id.to_i
+    with_template(infile) do |tmpl|
+      error("Unknown recipient #{id}") unless tmpl.valid_recipient_id?(id)
+      recipient = tmpl.recipient(id)
+      recipient.role_name = new_role_name if recipient
+      $stdout.print tmpl.to_xml
+    end
+  end
+
   desc "list FILE", "List all recipients in the template"
   def list(infile)
     with_template(infile) do |tmpl|
