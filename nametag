@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+require_relative 'lib/template'
+require_relative 'lib/nametag'
+
+Nametag.start(ARGV)
