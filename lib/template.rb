@@ -1,6 +1,21 @@
 require 'nokogiri'
 
 class Template
+
+  class Recipient
+    attr_reader :id, :role_name, :routing_order, :type, :email
+    def initialize(element)
+      @id            = element.at_css("ID").content.to_i
+      @role_name     = element.at_css("RoleName").content
+      @routing_order = element.at_css("RoutingOrder").content.to_i
+      @type          = element.at_css("Type").content
+      @email         = element.at_css("Email").content
+    end
+    def to_s
+      "%-8d%-8d%-16s%-16s%s" % [id, routing_order, role_name, type, email]
+    end
+  end
+
   DS_NAMESPACE = 'xmlns'
 
   def initialize(filename)
@@ -18,17 +33,11 @@ class Template
   end
 
   def recipients
-    @recipients ||= begin
-      @doc.css("Recipients Recipient").map do |recipient|
-        id = recipient.at_css("ID").content.to_i
-        role_name = recipient.at_css("RoleName").content
-        [id, role_name]
-      end
-    end
+    @recipients ||= @doc.css("Recipients Recipient").map { |e| Recipient.new(e) }
   end
 
   def valid_recipient_id?(id)
-    recipients.map(&:first).include? id
+    recipients.map(&:id).include?(id.to_i)
   end
 
   def reassign_recipients!(from, to)

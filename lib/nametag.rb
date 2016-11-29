@@ -22,6 +22,14 @@ class Nametag < Thor
     $stdout.print tmpl.to_xml
   end
 
+  desc "list FILE", "List all recipients in the template"
+  def list(infile)
+    error("Could not find file #{infile}") unless File.exists?(infile)
+    tmpl = Template.new(infile)
+    puts "ID      Order   RoleName        Type"
+    puts tmpl.recipients.sort_by(&:routing_order)
+  end
+
   desc "xpath FILE SELECTOR", "Search template with xpath selector"
   def xpath(infile, selector)
     error("Could not find file #{infile}") unless File.exists?(infile)
